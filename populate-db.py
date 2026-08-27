@@ -1,7 +1,7 @@
 #!/bin/python
 
 import sqlite3
-from urllib.request import urlretrieve
+import requests
 import urllib
 
 # CREATE TABLE Countries
@@ -76,26 +76,22 @@ with open("eu4-countries-table.html", "r") as raw:
     for l in lines:
         c: Country = extract_line_info(l)
         print(f"Adding data for {c.name}")
-        img_file_path = FLAG_PATH + c.name + ".png"
-        found_image = False
+        img_data = ""
         for width in FLAG_WIDTHS:
             img_link = WIKI_LINK + "thumb.php?f=" + urllib.parse.quote_plus(c.name) + f".png&width={width-1}"
-            path, headers = urlretrieve(img_link, img_file_path)
-            for h in headers.items():
-                if (h[1] == "image/png"):
-                    found_image = True
-                    break
-            if found_image:
+            response = requests.get(img_link)
+            if response.ok:
+                img_data = response.content
                 break
             if width == FLAG_WIDTHS[-1]:
                 print(f"Could not find image for {c.name}! Aborting...")
+                print(f"Wiki response for {img_link}:\n")
+                print(response.content)
                 conn.close()
                 exit(1)
 
-        with open(img_file_path, "rb") as img:
-            img_data = img.read()
-            data_tuple = (c.tag, c.name, img_data, c.subcontinent, c.region, c.province, c.notes)
-            cursor.execute(SQLITE_INSERT_QUERY, data_tuple)
+        data_tuple = (c.tag, c.name, img_data, c.subcontinent, c.region, c.province, c.notes)
+        cursor.execute(SQLITE_INSERT_QUERY, data_tuple)
 
 conn.commit()
 conn.close()
