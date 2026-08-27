@@ -1,0 +1,10 @@
+services:
+  eu4-flags:
+    build: .
+    container_name: eu4-flags
+    user: 1000:1000
+    environment:
+      CGO_ENABLED: 1
+    ports:
+      - 8787:8787
+    restart: 'unless-stopped'

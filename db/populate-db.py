@@ -13,7 +13,7 @@ import urllib
 # capital_province varchar(255),
 # notes varchar(255));
 
-SQLITE_INSERT_QUERY = "INSERT INTO Countries (tag, name, flag, capital_subcontinent, capital_region, capital_province, notes) VALUES (?, ?, ?, ?, ?, ?, ?)"
+SQLITE_INSERT_QUERY = "INSERT INTO Countries (id, tag, name, flag_path, capital_subcontinent, capital_region, capital_province, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 FLAG_PATH = "./flags/"
 WIKI_LINK = "https://eu4.paradoxwikis.com/"
 FLAG_WIDTHS = [1152, 1000, 900, 875, 840, 821, 800, 768, 350, 192]
@@ -76,21 +76,29 @@ with open("eu4-countries-table.html", "r") as raw:
     for l in lines:
         c: Country = extract_line_info(l)
         print(f"Adding data for {c.name}")
-        img_data = ""
+        img_path = FLAG_PATH + c.name + ".png"
+
+        session = requests.Session()
+
         for width in FLAG_WIDTHS:
             img_link = WIKI_LINK + "thumb.php?f=" + urllib.parse.quote_plus(c.name) + f".png&width={width-1}"
-            response = requests.get(img_link)
-            if response.ok:
-                img_data = response.content
+            response = session.get(img_link)
+            if response.headers.get("Content-Type") == "image/png":
+                with open(img_path, "wb") as file:
+                    file.write(response.content)
                 break
             if width == FLAG_WIDTHS[-1]:
                 print(f"Could not find image for {c.name}! Aborting...")
                 print(f"Wiki response for {img_link}:\n")
-                print(response.content)
+                print("status:", response.status_code)
+                print("content-type:", response.headers.get("Content-Type"))
+                print("final URL:", response.url)
+                print("cookies:", response.cookies)
+                print(response.text[:500])
                 conn.close()
                 exit(1)
 
-        data_tuple = (c.tag, c.name, img_data, c.subcontinent, c.region, c.province, c.notes)
+        data_tuple = (c.idx, c.tag, c.name, img_path, c.subcontinent, c.region, c.province, c.notes)
         cursor.execute(SQLITE_INSERT_QUERY, data_tuple)
 
 conn.commit()
