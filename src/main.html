@@ -6,11 +6,13 @@
 </head>
 <body>
     <div class="panel">
+        <label style="font-size: 3vmin; margin-top: 6%; margin-bottom: 11.5%;">Guess That EUIV Flag!</label>
+        <label id="subtitle-label"style="font-size: 2.5vmin;">Do you know this flag?</label>
         <div class="flag-container">
             <img src="{{ .Question.Flag }}" class="flag">
         </div>
         <div class="input-container">
-            <input type="text" id="input-field" class="input-field" placeholder="Enter a nation..." autofocus>
+            <input type="text" id="input-field" class="input-field" placeholder="Guess a nation..." autofocus>
             <button onclick="skip()" class="skip-button">Skip</button>
         </div>
     </div>
@@ -18,6 +20,25 @@
 </html>
 <script>
 const ans = "{{.Question.Answer}}";
+
+document.getElementById("input-field")
+    .addEventListener("input", (event) => checkAns());
+
+document.getElementById("subtitle-label").innerHTML = getSubtitle();
+
+function getSubtitle() {
+    const titles = [
+        "Do you know this flag?",
+        "How 'bout this one?",
+        "You'll never guess this!",
+        "Bet you've never seen this one!",
+        "Everyone knows this one!",
+        "This one's a classic!",
+        "Not sure about that design...",
+    ]
+
+    return titles[Math.floor(Math.random() * titles.length)];
+}
 
 function getCookie(cname) {
     let name = cname + "=";
@@ -61,6 +82,4 @@ function checkAns() {
     }
     
 }
-document.getElementById("input-field")
-    .addEventListener("input", (event) => checkAns());
 </script>

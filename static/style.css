@@ -11,22 +11,32 @@ body {
 .panel {
   background: url(/static/panel.png);
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: 85%;
+  background-position-x: center;
   width: 100vmin;
-  min-width: 700px;
-  height: 100%;
+  min-width: min(100%, 100vmin);
+  height: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -20px;
+  padding-bottom: 30px;
+}
+
+label {
+  color: white;
+  font-family: serif;
+  text-align: center;
 }
 
 .flag-container {
   background: #886622;
   width: 65%;
-  height: fit-content;
-  min-height: 43.3%;
+  height: max-content; 
   border: solid 2px #aa8855;
   padding: 2px;
   border-radius: 5px;
-  margin: auto;
-  margin-top: 33%;
+  margin-top: 6%;
   display: flex;
   box-shadow: 0 0 2px 1px darkorange, 0 0 15px 3px black;
 }
@@ -42,22 +52,22 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  margin: auto;
   margin-top: 5%;
-  width: 75%;
-  height: 5%;
+  margin-bottom: 10%;
+  width: 70%;
+  height: 5vmin;
 }
 
 .input-field {
   margin-right: 20px;
-  font-size: 20pt;
+  font-size: 3vmin;
   color: white;
   font-family: serif;
   border: none;
   border-radius: 10px;
-  padding: 7px;
-  padding-left: 12px;
-  height: 75%;
+  padding: 0.7vmin;
+  padding-left: 1.2vmin;
+  height: 4vmin;
   width: 80%;
   box-shadow: inset 0 0 15px 1px #000000aa;
   background: transparent;
@@ -67,19 +77,17 @@ body {
   outline: none;
 }
 
-
 .skip-button {
   background: url(/static/skip_button.png) no-repeat;
-  background-size: cover;
+  background-size: contain;
   width: fit-content;
-  padding-left: 43px;
-  padding-right: 43px;
+  padding-left: 4.2vmin;
+  padding-right: 4.2vmin;
   font-family: serif;
   color: white;
   border: none;
   height: 100%;
-  font-size: 20pt;
-  border-radius: 10px;
+  font-size: 2.9vmin;
 }
 
 .skip-button:hover {
