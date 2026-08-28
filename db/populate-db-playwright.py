@@ -135,7 +135,7 @@ def download_flag(page, country_name: str, output_path: str) -> bool:
 def main():
     os.makedirs(FLAG_PATH, exist_ok=True)
     
-    conn = sqlite3.connect("countries_test.db")
+    conn = sqlite3.connect("countries.db")
     cursor = conn.cursor()
     
     try:
