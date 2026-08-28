@@ -1,0 +1,88 @@
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #1f1f33;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.panel {
+  background: url(/static/panel.png);
+  background-repeat: no-repeat;
+  background-size: 100%;
+  width: 100vmin;
+  min-width: 700px;
+  height: 100%;
+}
+
+.flag-container {
+  background: #886622;
+  width: 65%;
+  height: fit-content;
+  min-height: 43.3%;
+  border: solid 2px #aa8855;
+  padding: 2px;
+  border-radius: 5px;
+  margin: auto;
+  margin-top: 33%;
+  display: flex;
+  box-shadow: 0 0 2px 1px darkorange, 0 0 15px 3px black;
+}
+
+.flag {
+  width: 100%;
+  margin: auto;
+  border-radius: 5px;
+  box-shadow: inset 0px 0px 50px 50px #00000066;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: auto;
+  margin-top: 5%;
+  width: 75%;
+  height: 5%;
+}
+
+.input-field {
+  margin-right: 20px;
+  font-size: 20pt;
+  color: white;
+  font-family: serif;
+  border: none;
+  border-radius: 10px;
+  padding: 7px;
+  padding-left: 12px;
+  height: 75%;
+  width: 80%;
+  box-shadow: inset 0 0 15px 1px #000000aa;
+  background: transparent;
+}
+
+.input-field:focus {
+  outline: none;
+}
+
+
+.skip-button {
+  background: url(/static/skip_button.png) no-repeat;
+  background-size: cover;
+  width: fit-content;
+  padding-left: 43px;
+  padding-right: 43px;
+  font-family: serif;
+  color: white;
+  border: none;
+  height: 100%;
+  font-size: 20pt;
+  border-radius: 10px;
+}
+
+.skip-button:hover {
+  background: url(/static/skip_button_hover.png) no-repeat;
+  background-size: cover;
+}

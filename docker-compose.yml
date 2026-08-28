@@ -7,4 +7,6 @@ services:
       CGO_ENABLED: 1
     ports:
       - 8787:8787
+    volumes:
+      - ./static/:/static:ro
     restart: 'unless-stopped'

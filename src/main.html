@@ -1,5 +1,66 @@
+<!DOCTYPE html>
+<html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <img src="data:;base64,{{ .Question.Flag }}" />
+    <div class="panel">
+        <div class="flag-container">
+            <img src="{{ .Question.Flag }}" class="flag">
+        </div>
+        <div class="input-container">
+            <input type="text" id="input-field" class="input-field" placeholder="Enter a nation..." autofocus>
+            <button onclick="skip()" class="skip-button">Skip</button>
+        </div>
+    </div>
 </body>
+</html>
+<script>
+const ans = "{{.Question.Answer}}";
+
+function getCookie(cname) {
+    let name = cname + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function setCookie(cname, cvalue, exyears) {
+    const d = new Date();
+    d.setTime(d.getTime() + (exyears*365*24*60*60*1000));
+    let expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function skip() {
+    let num_guessed = getCookie("num_guessed");
+    setCookie("num_guessed", Number(num_guessed) + 1, 10);
+    location.reload();
+}
+
+function checkAns() {
+    let input_field = document.getElementById("input-field");
+    let val = input_field.value
+    if (val.toLowerCase() == ans.toLowerCase()) {
+        let num_guessed = getCookie("num_guessed");
+        let num_correct = getCookie("num_correct");
+        setCookie("num_guessed", Number(num_guessed) + 1, 10);
+        setCookie("num_correct", Number(num_correct) + 1, 10);
+        input_field.value = "";
+        location.reload();
+    }
+    
+}
+document.getElementById("input-field")
+    .addEventListener("input", (event) => checkAns());
+</script>

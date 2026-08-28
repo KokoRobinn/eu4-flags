@@ -12,7 +12,7 @@ INSERT INTO Countries
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
-FLAG_PATH = "./flags/"
+FLAG_PATH = "/flags/"
 WIKI_LINK = "https://eu4.paradoxwikis.com/"
 FLAG_WIDTHS = [1152, 1000, 900, 875, 840, 821, 800, 768, 350, 192]
 

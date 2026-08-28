@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -66,20 +65,19 @@ func random_question(db *sql.DB, recently_guessed []int) Question {
 	}
 	var new_tag string = tags[r]
 
-	rows, err := db.Query("SELECT name, flag FROM Countries WHERE tag=?", new_tag)
+	rows, err := db.Query("SELECT name, flag_path FROM Countries WHERE tag=?", new_tag)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var name string
-	var image_data []byte
+	var flag_path string
 	rows.Next()
-	if err := rows.Scan(&name, &image_data); err != nil {
+	if err := rows.Scan(&name, &flag_path); err != nil {
 		log.Fatal(err)
 	}
 
-	b64image := base64.StdEncoding.EncodeToString([]byte(image_data))
-	return Question{b64image, name, r}
+	return Question{flag_path, name, r}
 }
 
 func main() {
@@ -101,6 +99,9 @@ func main() {
 			}{q})
 		}
 	})
+
+	fs := http.FileServer(http.Dir("/static/"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.ListenAndServe(":8787", nil)
 }
