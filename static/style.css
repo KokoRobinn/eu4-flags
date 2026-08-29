@@ -13,13 +13,12 @@ body {
   background-repeat: no-repeat;
   background-size: 85%;
   background-position-x: center;
-  width: 100vmin;
   min-width: min(100%, 100vmin);
-  height: max-content;
+  height: 100vmin;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: -20px;
+  margin-top: 25px;
   padding-bottom: 30px;
 }
 
@@ -31,18 +30,17 @@ label {
 
 .flag-container {
   background: #886622;
-  width: 65%;
-  height: max-content; 
-  border: solid 2px #aa8855;
-  padding: 2px;
+  height: 40%; 
+  border: solid 0.3vmin #aa8855;
+  padding: 0.3vmin;
   border-radius: 5px;
   margin-top: 6%;
   display: flex;
-  box-shadow: 0 0 2px 1px darkorange, 0 0 15px 3px black;
+  box-shadow: 0 0 2px 0.15vmin darkorange, 0 0 15px 3px black;
 }
 
 .flag {
-  width: 100%;
+  height: 100%;
   margin: auto;
   border-radius: 5px;
   box-shadow: inset 0px 0px 50px 50px #00000066;

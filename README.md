@@ -25,11 +25,6 @@ Most pressing are the following.
 There is no explaination as to what you are looking at when opening the page.
 Could be considered confusing by some.
 
-### Send questions in individual packets
-
-Currently the client just reloads the page whenever a flag is skipped or guessed correctly.
-Questions should really have a separate handler to the app itself for a smoother experience.
-
 ### Add options
 
 Knowing all flags in eu4 is no small feat!

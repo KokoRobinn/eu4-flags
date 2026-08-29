@@ -9,7 +9,7 @@
         <label style="font-size: 3vmin; margin-top: 6%; margin-bottom: 11.5%;">Guess That EUIV Flag!</label>
         <label id="subtitle-label"style="font-size: 2.5vmin;">Do you know this flag?</label>
         <div class="flag-container">
-            <img src="{{ .Question.Flag }}" class="flag">
+            <img src="/static/flags/Rebels.png" id="flag-image" class="flag">
         </div>
         <div class="input-container">
             <input type="text" id="input-field" class="input-field" placeholder="Guess a nation..." autofocus>
@@ -19,15 +19,19 @@
 </body>
 </html>
 <script>
-const ans = "{{.Question.Answer}}";
+const subtitleLabel = document.getElementById("subtitle-label");
+const flagImage = document.getElementById("flag-image");
+const input_field = document.getElementById("input-field");
+var ans = "";
 
 document.getElementById("input-field")
     .addEventListener("input", (event) => checkAns());
 
-document.getElementById("subtitle-label").innerHTML = getSubtitle();
+newQuestion();
 
-function getSubtitle() {
-    const titles = [
+
+function randomSubtitle() {
+    const subtitles = [
         "Do you know this flag?",
         "How 'bout this one?",
         "You'll never guess this!",
@@ -37,7 +41,7 @@ function getSubtitle() {
         "Not sure about that design...",
     ]
 
-    return titles[Math.floor(Math.random() * titles.length)];
+    subtitleLabel.innerHTML = titles[Math.floor(Math.random() * subtitles.length)];
 }
 
 function getCookie(cname) {
@@ -66,20 +70,26 @@ function setCookie(cname, cvalue, exyears) {
 function skip() {
     let num_guessed = getCookie("num_guessed");
     setCookie("num_guessed", Number(num_guessed) + 1, 10);
-    location.reload();
+    input_field.value = "";
+    newQuestion();    
 }
 
 function checkAns() {
-    let input_field = document.getElementById("input-field");
     let val = input_field.value
     if (val.toLowerCase() == ans.toLowerCase()) {
-        let num_guessed = getCookie("num_guessed");
         let num_correct = getCookie("num_correct");
-        setCookie("num_guessed", Number(num_guessed) + 1, 10);
         setCookie("num_correct", Number(num_correct) + 1, 10);
-        input_field.value = "";
-        location.reload();
+        skip();
     }
-    
+}
+
+function newQuestion() {
+    fetch("/new")
+        .then((response) => response.json())
+        .then((q) => {
+            ans = q.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            flagImage.src = q.flag;
+        });
+    input_field.focus();
 }
 </script>

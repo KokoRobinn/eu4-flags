@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -11,9 +12,9 @@ import (
 )
 
 type Question struct {
-	Flag   string
-	Answer string
-	Idx    int
+	Flag   string `json:"flag"`
+	Answer string `json:"answer"`
+	Idx    int    `json:"idx"`
 }
 
 const DB_NAME string = "countries.db"
@@ -93,10 +94,14 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			main_tmpl.Execute(w, struct{}{})
+		}
+	})
+
+	http.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
 			var q = random_question(db, make([]int, 0))
-			main_tmpl.Execute(w, struct {
-				Question Question
-			}{q})
+			json.NewEncoder(w).Encode(q)
 		}
 	})
 
