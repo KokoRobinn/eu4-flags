@@ -7,8 +7,11 @@
 </head>
 <body>
     <div class="panel">
-        <label style="font-size: 3vmin; margin-top: 6%; margin-bottom: 11.5%;">Guess That EUIV Flag!</label>
-        <label id="subtitle-label"style="font-size: 2.5vmin;">Do you know this flag?</label>
+        <label class="title">Guess That EUIV Flag!</label>
+        <div class="control-panel">
+            <button onclick="openOptions()" class="options-button"></button>
+        </div>
+        <label id="subtitle-label" class="subtitle">Do you know this flag?</label>
         <div class="flag-container">
             <img src="/static/flags/Rebels.png" id="flag-image" class="flag">
         </div>
@@ -17,19 +20,42 @@
             <button onclick="skip()" class="skip-button">Skip</button>
         </div>
     </div>
+    <div id="options-menu-bg" class="options-menu-bg">
+        <div class="options-menu">
+        <img src="/static/x-button.png" class="close-button" onclick="closeOptions()">
+        </div>
+    </div>
 </body>
 </html>
 <script>
 const subtitleLabel = document.getElementById("subtitle-label");
 const flagImage = document.getElementById("flag-image");
 const input_field = document.getElementById("input-field");
+const options_menu_bg = document.getElementById("options-menu-bg");
 var ans = "";
 
 document.getElementById("input-field")
     .addEventListener("input", (event) => checkAns());
 
+document.addEventListener("keydown", handleShortcut);
+
 newQuestion();
 
+
+function handleShortcut(event) {
+    if (event.key === "Escape" && options_menu_bg.style.display != "none") {
+        event.preventDefault();
+        closeOptions();
+    }
+}
+
+function openOptions() {
+    options_menu_bg.style.display = "block";
+}
+
+function closeOptions() {
+    options_menu_bg.style.display = "none";
+}
 
 function randomSubtitle() {
     const subtitles = [
