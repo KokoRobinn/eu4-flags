@@ -7,7 +7,6 @@ RUN go mod tidy
 RUN go mod download
 
 COPY ./src .
-COPY ./db/countries.db .
 EXPOSE 8787
 RUN go build -v -o /usr/local/bin/app ./...
 

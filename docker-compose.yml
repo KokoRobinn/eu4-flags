@@ -9,4 +9,5 @@ services:
       - 8787:8787
     volumes:
       - ./static/:/static:ro
+      - ./db/:/db:ro
     restart: 'unless-stopped'

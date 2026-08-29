@@ -17,7 +17,7 @@ type Question struct {
 	Idx    int    `json:"idx"`
 }
 
-const DB_NAME string = "countries.db"
+const DB_PATH string = "/db/countries.db"
 
 var tags []string
 
@@ -82,7 +82,7 @@ func random_question(db *sql.DB, recently_guessed []int) Question {
 }
 
 func main() {
-	db, err := sql.Open("sqlite3", "./"+DB_NAME)
+	db, err := sql.Open("sqlite3", DB_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
