@@ -87,7 +87,7 @@ function newQuestion() {
     fetch("/new")
         .then((response) => response.json())
         .then((q) => {
-            ans = q.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            ans = q.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace("–", "-");
             flagImage.src = q.flag;
         });
     input_field.focus();
