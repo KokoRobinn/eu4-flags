@@ -9,12 +9,13 @@ It is then accessible on port 8787 or whatever port you set in `docker-compose.y
 
 ## DB Overview
 
-| id  | tag        | name        | flag_path   | capital_subcontinent | capital_region | capital_province | notes | formable |
-|:---:|:----------:|:-----------:|------------:|:--------------------:|:--------------:|:----------------:|:-----:|:--------:|
-| INT | varchar(3) | varchar(63) | varchar(63) | varchar(63)          | varchar(63)    | varchar(63)      | TEXT  | INT      |
+| id  | tag        | name        | flag_path   | capital_subcontinent | capital_region | capital_province | notes | formable | exists_1444 | releasable |
+|:---:|:----------:|:-----------:|------------:|:--------------------:|:--------------:|:----------------:|:-----:|:--------:|:-----------:|:----------:|
+| INT | varchar(3) | varchar(63) | varchar(63) | varchar(63)          | varchar(63)    | varchar(63)      | TEXT  | INT      | INT         | INT        |
 
 * The `flag_path` field contains the relative file path to the image.
-* `formable` is `1` for formable nations, `0` otherwise. Currently based on the `notes` field, which in turn is ripped from the nations list on the eu4 wiki.
+* `formable`, `exists_1444` and `releasable` is `1` if true, `0` otherwise. 
+Currently based on the `notes` field, which in turn is ripped from the nations list on the eu4 wiki.
 
 ## Improvements
 
