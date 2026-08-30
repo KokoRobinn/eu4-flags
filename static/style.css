@@ -6,6 +6,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow-y: hidden;
 }
 
 .panel {
@@ -146,11 +147,12 @@ label {
   background: white;
   position: relative;
   margin: auto;
-  margin-top: 15vh;
+  margin-top: 10vh;
   width: 35vw;
   height: 70vh;
   min-width: 400px;
   overflow-y: scroll;
+  padding: 5%;
 }
 
 .close-button {

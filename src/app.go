@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand/v2"
 	"net/http"
+	"os"
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,12 +19,58 @@ type Question struct {
 	Idx    int    `json:"idx"`
 }
 
+type Filter interface {
+	appendSQL(q string, args []any) (string, []any)
+}
+
+type BoolFilter struct {
+	Field   string
+	Include bool
+}
+
+type ListFilter struct {
+	Field   string
+	Include []string
+}
+
+func (f BoolFilter) appendSQL(q string, args []any) (string, []any) {
+	var val int = 0
+	if f.Include {
+		val = 1
+	}
+	return q + f.Field + "=?", append(args, val)
+}
+
+func (f ListFilter) appendSQL(q string, args []any) (string, []any) {
+	q += f.Field + " IN ("
+	for _, val := range f.Include {
+		q += "?,"
+		args = append(args, val)
+	}
+	q = q[:len(q)-1] + ")"
+	return q, args
+}
+
 const DB_PATH string = "/db/countries.db"
 
-var tags []string
+var all_ids []int
 
-func get_tags(db *sql.DB) {
-	count, err := db.Query("SELECT COUNT(*) FROM Countries")
+func get_ids[T Filter](db *sql.DB, filters []T) []int {
+	var where_query string = ""
+	var query_args []any = make([]any, 0)
+	if len(filters) > 0 {
+		where_query = " WHERE "
+	}
+	for i, f := range filters {
+		where_query, query_args = f.appendSQL(where_query, query_args)
+		if i < len(filters)-1 {
+			where_query += " AND "
+		}
+	}
+	fmt.Fprintln(os.Stdout, where_query)
+	fmt.Fprintln(os.Stdout, query_args)
+
+	count, err := db.Query("SELECT COUNT(*) FROM Countries"+where_query, query_args...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,20 +81,21 @@ func get_tags(db *sql.DB) {
 		log.Fatal(err)
 	}
 
-	tags = make([]string, num_countries)
+	var ids = make([]int, num_countries)
 
-	rows, err := db.Query("SELECT tag FROM Countries")
+	rows, err := db.Query("SELECT id FROM Countries"+where_query, query_args...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var i int = 0
 	for rows.Next() {
-		if err := rows.Scan(&tags[i]); err != nil {
+		if err := rows.Scan(&ids[i]); err != nil {
 			log.Fatal(err)
 		}
 		i++
 	}
+	return ids
 }
 
 func Contains[T comparable](s []T, e T) bool {
@@ -59,14 +108,14 @@ func Contains[T comparable](s []T, e T) bool {
 }
 
 // Creates a random question, barring country indices present in recently_guessed
-func random_question(db *sql.DB, recently_guessed []int) Question {
-	var r = rand.IntN(len(tags))
+func random_question(db *sql.DB, ids []int, recently_guessed []int) Question {
+	var r = rand.IntN(len(ids))
 	for Contains(recently_guessed, r) {
-		r = r + 1%len(tags)
+		r = r + 1%len(ids)
 	}
-	var new_tag string = tags[r]
+	var id int = ids[r]
 
-	rows, err := db.Query("SELECT name, flag_path FROM Countries WHERE tag=?", new_tag)
+	rows, err := db.Query("SELECT name, flag_path FROM Countries WHERE id=?", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,6 +131,11 @@ func random_question(db *sql.DB, recently_guessed []int) Question {
 }
 
 func main() {
+	//var bf = BoolFilter{"formable", false}
+	//var lf = ListFilter{"capital_subcontinent", []string{"Western Europe", "Eastern Europe"}}
+	//var filters []Filter = []Filter{bf, lf}
+	var filters []Filter = make([]Filter, 0)
+
 	db, err := sql.Open("sqlite3", DB_PATH)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +144,7 @@ func main() {
 
 	main_tmpl := template.Must(template.ParseFiles("main.html"))
 
-	get_tags(db)
+	all_ids = get_ids(db, filters)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -100,7 +154,7 @@ func main() {
 
 	http.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			var q = random_question(db, make([]int, 0))
+			var q = random_question(db, all_ids, make([]int, 0))
 			json.NewEncoder(w).Encode(q)
 		}
 	})
