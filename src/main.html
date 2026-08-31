@@ -12,17 +12,31 @@
       <button onclick="openOptions()" class="options-button"></button>
     </div>
     <label id="subtitle-label" class="subtitle">Do you know this flag?</label>
-    <div class="flag-container">
+    <a id="flag-container" class="flag-container">
       <img src="/static/flags/Rebels.png" id="flag-image" class="flag">
-    </div>
+    </a>
     <div class="input-container">
       <input type="text" id="input-field" class="input-field" placeholder="Guess a nation..." autofocus>
       <button onclick="skip()" class="skip-button">Skip</button>
     </div>
   </div>
   <div id="options-menu-bg" class="options-menu-bg">
-    <div class="options-menu">
+    <div class="options-panel">
     <img src="/static/x-button.png" class="close-button" onclick="closeOptions()">
+      <div id="options-menu">
+      {{range .BoolFilters}}
+        <input type="checkbox" filter="bool" id="{{.Field}}" name="{{.Field}}" value="true" checked="{{.Include}}">
+        <label for="{{.Field}}">{{.Field}}</label><br>
+      {{end}}
+      {{range .ListFilters}}
+      {{$field := .Field}}
+        <span style="color: white;">{{$field}}</span><br>
+        {{range .Include}}
+          <input type="checkbox" filter="list" name="{{$field}}" value="{{.}}" checked="true">
+          <label for="{{.}}">{{.}}</label><br>
+        {{end}}
+      {{end}}
+      </div>
     </div>
   </div>
 </body>
@@ -30,15 +44,29 @@
 <script>
 const subtitleLabel = document.getElementById("subtitle-label");
 const flagImage = document.getElementById("flag-image");
+const flagContainer = document.getElementById("flag-container");
 const input_field = document.getElementById("input-field");
 const options_menu_bg = document.getElementById("options-menu-bg");
-var ans = "";
+const options_menu = document.getElementById("options-menu");
+const pdx_wiki_url = "https://eu4.paradoxwikis.com"
+var ans = "Rebels";
 
 document.getElementById("input-field")
   .addEventListener("input", (event) => checkAns());
 
 document.addEventListener("keydown", handleShortcut);
 
+let s = getCookie("settings")
+if (s != "") {
+  fetch("/update-settings",
+  {
+    method: "POST",
+    body: JSON.stringify(s),
+    headers: {
+      "Content-type": "application/json",
+    },
+  })
+}
 newQuestion();
 
 
@@ -55,6 +83,37 @@ function openOptions() {
 
 function closeOptions() {
   options_menu_bg.style.display = "none";
+  const bool_filter_ids = Array.from(options_menu.querySelectorAll('input[filter="bool"]:checked'))
+    .map(checkbox => checkbox.id);
+  var list_filter_names = Array.from(options_menu.querySelectorAll('input[filter="list"]'))
+    .map((checkbox) => checkbox.name)
+  list_filter_names = [...(new Set(list_filter_names))]
+  var filters = []
+  bool_filter_ids.forEach(id => {
+    filters.push({
+      "field": id, 
+      "include": true
+    });
+  });
+  list_filter_names.forEach(field => {
+    const includes = Array.from(options_menu.querySelectorAll(`input[name="${field}"]:checked`))
+      .map((checkbox) => checkbox.value)
+    filters.push({
+      "field": field,
+      "include": includes
+    })
+  });
+  
+  setCookie("settings", JSON.stringify(filters), 10)
+  fetch("/update-settings",
+  {
+    method: "POST",
+    body: JSON.stringify(filters),
+    headers: {
+      "Content-type": "application/json",
+    },
+  })
+  console.log(JSON.stringify(filters))
 }
 
 function randomSubtitle() {
@@ -116,6 +175,7 @@ function newQuestion() {
     .then((q) => {
       ans = q.answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace("–", "-");
       flagImage.src = q.flag;
+      flagContainer.href = pdx_wiki_url + q.flag.replace("/static/flags", "").replace(".png", "")
     });
   input_field.focus();
 }

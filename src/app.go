@@ -3,12 +3,14 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand/v2"
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -19,18 +21,23 @@ type Question struct {
 	Idx    int    `json:"idx"`
 }
 
+type IdsEntry struct {
+	Ids     []int
+	Created time.Time
+}
+
 type Filter interface {
 	appendSQL(q string, args []any) (string, []any)
 }
 
 type BoolFilter struct {
-	Field   string
-	Include bool
+	Field   string `json:"field"`
+	Include bool   `json:"include"`
 }
 
 type ListFilter struct {
-	Field   string
-	Include []string
+	Field   string   `json:"field"`
+	Include []string `json:"include"`
 }
 
 func (f BoolFilter) appendSQL(q string, args []any) (string, []any) {
@@ -51,8 +58,76 @@ func (f ListFilter) appendSQL(q string, args []any) (string, []any) {
 	return q, args
 }
 
-const DB_PATH string = "/db/countries.db"
+type Filters []Filter
 
+func (f *Filters) UnmarshalJSON(data []byte) error {
+	var raw []json.RawMessage
+
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	for _, item := range raw {
+		var boolFilter BoolFilter
+		if err := json.Unmarshal(item, &boolFilter); err == nil {
+			var include json.RawMessage
+
+			var obj map[string]json.RawMessage
+			if err := json.Unmarshal(item, &obj); err != nil {
+				return err
+			}
+
+			include = obj["include"]
+
+			var b bool
+			if err := json.Unmarshal(include, &b); err == nil {
+				boolFilter.Include = b
+				*f = append(*f, boolFilter)
+				continue
+			}
+		}
+
+		// Otherwise try ListFilter
+		var listFilter ListFilter
+		if err := json.Unmarshal(item, &listFilter); err != nil {
+			return err
+		}
+
+		*f = append(*f, listFilter)
+	}
+
+	return nil
+}
+
+const DB_PATH string = "/db/countries.db"
+const PLAYER_HASH_LEN = 10
+const PLAYER_HASH_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+var all_filters []Filter = []Filter{
+	ListFilter{"capital_subcontinent", []string{
+		"-",
+		"Western Europe",
+		"Eastern Europe",
+		"Levant",
+		"India",
+		"Amazonia",
+		"North America",
+		"Andes",
+		"Central America",
+		"Oceania",
+		"Persia",
+		"Tartary",
+		"Northern Africa",
+		"Southern Africa",
+		"East Indies",
+		"Far East",
+		"China",
+	}},
+	BoolFilter{"formable", true},
+	BoolFilter{"exists_1444", true},
+	BoolFilter{"releasable", true},
+}
+var player_filters map[string]IdsEntry = make(map[string]IdsEntry, 0)
 var all_ids []int
 
 func get_ids[T Filter](db *sql.DB, filters []T) []int {
@@ -67,8 +142,6 @@ func get_ids[T Filter](db *sql.DB, filters []T) []int {
 			where_query += " AND "
 		}
 	}
-	fmt.Fprintln(os.Stdout, where_query)
-	fmt.Fprintln(os.Stdout, query_args)
 
 	count, err := db.Query("SELECT COUNT(*) FROM Countries"+where_query, query_args...)
 	if err != nil {
@@ -96,6 +169,20 @@ func get_ids[T Filter](db *sql.DB, filters []T) []int {
 		i++
 	}
 	return ids
+}
+
+func make_player_hash(name string) string {
+	seed := time.Now().Local().UnixMicro()
+	player_hash := make([]byte, PLAYER_HASH_LEN)
+	player_hash[0] = PLAYER_HASH_CHARS[seed%int64(len(PLAYER_HASH_CHARS))]
+	for i := int64(1); i < PLAYER_HASH_LEN; i++ {
+		player_hash[i] = PLAYER_HASH_CHARS[(int64(player_hash[i-1])*seed^int64(name[i%int64(len(name))])>>i)%int64(len(PLAYER_HASH_CHARS))]
+	}
+	//TODO: make this more robust
+	//for _, exists := active_quizzes[Code(string(player_hash))]; exists; {
+	//      player_hash[0] = PLAYER_HASH_CHARS[(int64(player_hash[0])^seed)%int64(len(CODE_CHARS))]
+	//}
+	return string(player_hash)
 }
 
 func Contains[T comparable](s []T, e T) bool {
@@ -130,32 +217,97 @@ func random_question(db *sql.DB, ids []int, recently_guessed []int) Question {
 	return Question{flag_path, name, r}
 }
 
-func main() {
-	//var bf = BoolFilter{"formable", false}
-	//var lf = ListFilter{"capital_subcontinent", []string{"Western Europe", "Eastern Europe"}}
-	//var filters []Filter = []Filter{bf, lf}
-	var filters []Filter = make([]Filter, 0)
+func get_player_hash(w http.ResponseWriter, r *http.Request) string {
+	var player_hash_cookie, err = r.Cookie("player_hash")
+	fmt.Fprintln(os.Stdout, "New connection from player")
+	if err != nil {
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			var player_hash = make_player_hash(r.RemoteAddr)
+			player_hash_cookie = &http.Cookie{
+				Name:    "player_hash",
+				Value:   player_hash,
+				Path:    "/",
+				Expires: time.Now().Add(time.Hour * 24 * 365 * 10),
+			}
+			http.SetCookie(w, player_hash_cookie)
+		default:
+			http.Error(w, "server error", http.StatusInternalServerError)
+			log.Fatal(err)
+		}
+	}
+	return player_hash_cookie.Value
+}
 
+func purge_ids() {
+	for h, e := range player_filters {
+		if e.Created.Add(time.Hour * 24).Before(time.Now()) {
+			delete(player_filters, h)
+		}
+	}
+	time.Sleep(time.Hour * 3)
+}
+
+func main() {
 	db, err := sql.Open("sqlite3", DB_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}
+	go purge_ids()
 	defer db.Close()
 
 	main_tmpl := template.Must(template.ParseFiles("main.html"))
 
-	all_ids = get_ids(db, filters)
+	all_ids = get_ids(db, make([]Filter, 0))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			main_tmpl.Execute(w, struct{}{})
+			get_player_hash(w, r)
+
+			var bool_filters = make([]Filter, 0)
+			var list_filters = make([]Filter, 0)
+			for _, f := range all_filters {
+				switch f.(type) {
+				case BoolFilter:
+					bool_filters = append(bool_filters, f)
+				default:
+					list_filters = append(list_filters, f)
+				}
+			}
+			main_tmpl.Execute(w, struct {
+				ListFilters []Filter
+				BoolFilters []Filter
+			}{list_filters, bool_filters})
 		}
 	})
 
 	http.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			var q = random_question(db, all_ids, make([]int, 0))
+			player_hash := get_player_hash(w, r)
+			ids_entry, exists := player_filters[player_hash]
+			var ids []int
+			if !exists {
+				ids = all_ids
+			} else {
+				ids = ids_entry.Ids
+			}
+			var q = random_question(db, ids, make([]int, 0))
 			json.NewEncoder(w).Encode(q)
+		}
+	})
+
+	http.HandleFunc("/update-settings", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			player_hash := get_player_hash(w, r)
+			var filters Filters
+			fmt.Fprintln(os.Stdout, "received new settings for "+player_hash)
+			err := json.NewDecoder(r.Body).Decode(&filters)
+			if err != nil {
+				fmt.Fprintln(os.Stdout, "Invalid settings submitted")
+				return
+			}
+			new_ids := get_ids(db, filters)
+			player_filters[player_hash] = IdsEntry{new_ids, time.Now()}
 		}
 	})
 

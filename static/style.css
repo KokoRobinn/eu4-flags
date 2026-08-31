@@ -121,7 +121,7 @@ label {
 }
 
 .options-button {
-  background: url(/static/skip_button.png);
+  background: url(/static/square-button.png) no-repeat;
   background-size: contain;
   width: fit-content;
   width: 5vmin;
@@ -143,8 +143,8 @@ label {
   background-color: #000000aa;
 }
 
-.options-menu {
-  background: white;
+.options-panel {
+  background: rgb(50, 47, 79);
   position: relative;
   margin: auto;
   margin-top: 10vh;
@@ -153,6 +153,9 @@ label {
   min-width: 400px;
   overflow-y: scroll;
   padding: 5%;
+  border-radius: 3vmin;
+  border: solid 0.15vmin silver;
+  box-shadow: 0 0 0 2px rgb(55, 73, 73);
 }
 
 .close-button {
