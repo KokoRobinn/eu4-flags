@@ -219,7 +219,6 @@ func random_question(db *sql.DB, ids []int, recently_guessed []int) Question {
 
 func get_player_hash(w http.ResponseWriter, r *http.Request) string {
 	var player_hash_cookie, err = r.Cookie("player_hash")
-	fmt.Fprintln(os.Stdout, "New connection from player")
 	if err != nil {
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
@@ -262,7 +261,8 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			get_player_hash(w, r)
+			player_hash := get_player_hash(w, r)
+			fmt.Fprintln(os.Stdout, "New connection from player: "+player_hash)
 
 			var bool_filters = make([]Filter, 0)
 			var list_filters = make([]Filter, 0)
