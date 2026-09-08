@@ -140,7 +140,7 @@ function randomSubtitle() {
     "Not sure about that design...",
   ]
 
-  subtitleLabel.innerHTML = titles[Math.floor(Math.random() * subtitles.length)];
+  subtitleLabel.innerHTML = subtitles[Math.floor(Math.random() * subtitles.length)];
 }
 
 function getCookie(cname) {
@@ -190,6 +190,7 @@ function newQuestion() {
       flagImage.src = q.flag;
       flagContainer.href = pdx_wiki_url + q.flag.replace("/static/flags", "").replace(".png", "")
     });
+  randomSubtitle();
   input_field.focus();
 }
 </script>
