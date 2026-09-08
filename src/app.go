@@ -242,12 +242,15 @@ func get_player_hash(w http.ResponseWriter, r *http.Request) string {
 }
 
 func purge_ids() {
-	for h, e := range player_filters {
-		if e.Created.Add(time.Hour * 24).Before(time.Now()) {
-			delete(player_filters, h)
+	for true {
+		for h, e := range player_filters {
+			if e.Created.Add(time.Hour * 24).Before(time.Now()) {
+				delete(player_filters, h)
+				fmt.Fprintln(os.Stdout, "Purged settings for player:", h)
+			}
 		}
+		time.Sleep(time.Hour * 3)
 	}
-	time.Sleep(time.Hour * 3)
 }
 
 func main() {
