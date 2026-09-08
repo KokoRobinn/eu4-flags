@@ -22,21 +22,27 @@
   </div>
   <div id="options-menu-bg" class="options-menu-bg">
     <div class="options-panel">
-    <img src="/static/x-button.png" class="close-button" onclick="closeOptions()">
+      <img src="/static/x-button.png" class="close-button" onclick="closeOptions()">
       <div id="options-menu">
       {{range .BoolFilters}}
-        <input type="checkbox" filter="bool" id="{{.Field}}" name="{{.Field}}" value="true" checked="{{.Include}}">
+        <input type="checkbox" filter="bool" id="{{.Field}}" name="{{.Field}}" value="{{.Field}}" {{if .Include}}checked{{end}}>
         <label for="{{.Field}}">{{.Field}}</label><br>
       {{end}}
       {{range .ListFilters}}
       {{$field := .Field}}
         <span style="color: white;">{{$field}}</span><br>
         {{range .Include}}
-          <input type="checkbox" filter="list" name="{{$field}}" value="{{.}}" checked="true">
+          <input type="checkbox" filter="list" name="{{$field}}" value="{{.}}" checked>
           <label for="{{.}}">{{.}}</label><br>
         {{end}}
       {{end}}
       </div>
+      <br>
+      <br>
+      <br>
+      <span style="color: white;">
+        NOTE: Chosen countries must currently satisfy all active filters, meaning no country will be chosen if all filters are active.
+      </span>
     </div>
   </div>
 </body>
@@ -58,17 +64,24 @@ document.addEventListener("keydown", handleShortcut);
 
 let s = getCookie("settings")
 if (s != "") {
+  const filter_string = JSON.stringify(s)
+  const checkboxes = Array.from(options_menu.querySelectorAll('input[type="checkbox"]'))
+    .forEach(checkbox => {
+      if (!filter_string.includes(checkbox.value)) {
+        checkbox.checked = false
+        console.log(`Unchecking box ${checkbox.name}`)
+      }      
+    });
   fetch("/update-settings",
   {
     method: "POST",
-    body: JSON.stringify(s),
+    body: s,
     headers: {
       "Content-type": "application/json",
     },
   })
 }
 newQuestion();
-
 
 function handleShortcut(event) {
   if (event.key === "Escape" && options_menu_bg.style.display != "none") {

@@ -123,9 +123,9 @@ var all_filters []Filter = []Filter{
 		"Far East",
 		"China",
 	}},
-	BoolFilter{"formable", true},
 	BoolFilter{"exists_1444", true},
-	BoolFilter{"releasable", true},
+	BoolFilter{"formable", false},
+	BoolFilter{"releasable", false},
 }
 var player_filters map[string]IdsEntry = make(map[string]IdsEntry, 0)
 var all_ids []int
@@ -143,15 +143,18 @@ func get_ids[T Filter](db *sql.DB, filters []T) []int {
 		}
 	}
 
-	count, err := db.Query("SELECT COUNT(*) FROM Countries"+where_query, query_args...)
+	var num_countries int = 0
+	err := db.QueryRow(
+		"SELECT COUNT(*) FROM Countries"+where_query,
+		query_args...,
+	).Scan(&num_countries)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var num_countries int = 0
-	count.Next()
-	if err := count.Scan(&num_countries); err != nil {
-		log.Fatal(err)
+	if num_countries == 0 {
+		return []int{1}
 	}
 
 	var ids = make([]int, num_countries)
@@ -168,6 +171,7 @@ func get_ids[T Filter](db *sql.DB, filters []T) []int {
 		}
 		i++
 	}
+
 	return ids
 }
 
@@ -179,8 +183,8 @@ func make_player_hash(name string) string {
 		player_hash[i] = PLAYER_HASH_CHARS[(int64(player_hash[i-1])*seed^int64(name[i%int64(len(name))])>>i)%int64(len(PLAYER_HASH_CHARS))]
 	}
 	//TODO: make this more robust
-	//for _, exists := active_quizzes[Code(string(player_hash))]; exists; {
-	//      player_hash[0] = PLAYER_HASH_CHARS[(int64(player_hash[0])^seed)%int64(len(CODE_CHARS))]
+	//for _, exists := player_filters[player_hash]; exists; {
+	//      player_hash[0] = PLAYER_HASH_CHARS[(int64(player_hash[0])^seed)%int64(len(PLAYER_HASH_CHARS))]
 	//}
 	return string(player_hash)
 }
@@ -197,20 +201,19 @@ func Contains[T comparable](s []T, e T) bool {
 // Creates a random question, barring country indices present in recently_guessed
 func random_question(db *sql.DB, ids []int, recently_guessed []int) Question {
 	var r = rand.IntN(len(ids))
-	for Contains(recently_guessed, r) {
+	for Contains(recently_guessed, r) && len(ids) > len(recently_guessed) {
 		r = r + 1%len(ids)
 	}
 	var id int = ids[r]
 
-	rows, err := db.Query("SELECT name, flag_path FROM Countries WHERE id=?", id)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var name string
 	var flag_path string
-	rows.Next()
-	if err := rows.Scan(&name, &flag_path); err != nil {
+	err := db.QueryRow(
+		"SELECT name, flag_path FROM Countries WHERE id=?",
+		id,
+	).Scan(&name, &flag_path)
+
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -303,7 +306,6 @@ func main() {
 			fmt.Fprintln(os.Stdout, "received new settings for "+player_hash)
 			err := json.NewDecoder(r.Body).Decode(&filters)
 			if err != nil {
-				fmt.Fprintln(os.Stdout, "Invalid settings submitted")
 				return
 			}
 			new_ids := get_ids(db, filters)

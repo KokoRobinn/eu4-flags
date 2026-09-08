@@ -109,6 +109,7 @@ label {
 .skip-button:hover {
   background: url(/static/skip_button_hover.png) no-repeat;
   background-size: cover;
+  color: #777777;
 }
 
 .control-panel {
@@ -148,11 +149,11 @@ label {
   position: relative;
   margin: auto;
   margin-top: 10vh;
-  width: 35vw;
+  width: 25vw;
   height: 70vh;
   min-width: 400px;
   overflow-y: scroll;
-  padding: 5%;
+  padding: 3em;
   border-radius: 3vmin;
   border: solid 0.15vmin silver;
   box-shadow: 0 0 0 2px rgb(55, 73, 73);
