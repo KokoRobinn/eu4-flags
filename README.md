@@ -34,10 +34,10 @@ Thus, it is also a daunting task, which may make this boring for some since most
 This calls for an options menu which lets you constrain the flags you get.
 Some examples include:
 
-* Constrain by geography i.e Continent, Subcontinent, Region.
-* Constrain by year, most reasonably nations which are present in 1444.
+* ~~Constrain by geography i.e Continent, Subcontinent, Region.~~
+* ~~Constrain by year, most reasonably nations which are present in 1444.~~
 * Constrain by size e.g only show nations with more than one province.
-* Exclude formables.
+* ~~Exclude formables.~~
 * Exclude easter eggs.
 
 ### Expand database
