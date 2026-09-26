@@ -9,6 +9,10 @@ body {
   overflow-y: hidden;
 }
 
+button {
+  cursor: pointer;
+}
+
 .panel {
   background: url(/static/panel.png);
   background-repeat: no-repeat;
@@ -21,6 +25,21 @@ body {
   align-items: center;
   margin-top: 25px;
   padding-bottom: 30px;
+}
+
+.github-container {
+  display: block;
+  position: fixed;
+  left: 0;
+  top: 0;
+  margin: 10px 0 0 10px;
+}
+
+.github {
+  height: 24px;
+  width: 24px;
+  fill: #FFFFFF;
+  display: inline-block;
 }
 
 label {
